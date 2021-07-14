@@ -46,7 +46,7 @@ web:
   service:
     type: ClusterIP
     port: 80
-    targetPort: 8000
+    targetPort: 3031
 
   ingress:
     enabled: false
@@ -59,7 +59,7 @@ web:
         - path: /
           backend:
             serviceName: ureport-web
-            servicePort: 8000
+            servicePort: 3031
     tls: []
     #  - secretName: ureport-tls
     #    hosts:
@@ -82,7 +82,7 @@ web:
 
   livenessProbe:
     httpGet:
-      path: /ping
+      path: /status
       port: http
     initialDelaySeconds: 80
     timeoutSeconds: 5
@@ -91,7 +91,7 @@ web:
 
   readinessProbe:
     httpGet:
-      path: /ping
+      path: /status
       port: http
     initialDelaySeconds: 30
     timeoutSeconds: 5
