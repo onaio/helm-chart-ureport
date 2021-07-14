@@ -1,0 +1,43 @@
+{{- if .Values.preInstallJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ureport.fullname" . }}-pre-install
+  labels:
+    {{- include "ureport.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pre-install-job
+  annotations:
+    "helm.sh/hook": post-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
+    checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+    checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+spec:
+  template:
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.web.podSecurityContext | nindent 8 }}
+      containers:
+        - name: pre-install-job
+          securityContext:
+            {{- toYaml .Values.web.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - '-c'
+            - >-
+              python manage.py migrate --noinput &&
+              python manage.py add_country_alias
+          envFrom:
+            - configMapRef:
+                name: {{ include "ureport.fullname" . }}
+            - secretRef:
+                name: {{ include "ureport.fullname" . }}
+      restartPolicy: Never
+  backoffLimit: 0
+{{- end }}

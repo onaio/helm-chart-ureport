@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ureport.fullname" . }}-celery-beat
+  labels:
+    {{- include "ureport.labels" . | nindent 4 }}
+    app.kubernetes.io/component: celery-beat
+spec:
+  replicas: {{ .Values.celeryBeat.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ureport.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: celery-beat
+      {{- with .Values.extraSelectorLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "ureport.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: celery-beat
+        {{- with .Values.extraSelectorLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.celeryBeat.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.celeryBeat.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.celeryBeat.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ureport.fullname" . }}
+            - secretRef:
+                name: {{ include "ureport.fullname" . }}
+          resources:
+            {{- toYaml .Values.celeryBeat.resources | nindent 12 }}
+      {{- with .Values.celeryBeat.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.celeryBeat.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.celeryBeat.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

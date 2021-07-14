@@ -1,0 +1,14 @@
+apiVersion: v2
+name: ureport
+description: UReport is a dashboard built on data collected by RapidPro
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - ureport
+maintainers:
+  - email: techops@ona.io
+    name: Ona
+sources:
+  - https://github.com/onaio/ureport-docker
+  - https://github.com/rapidpro/ureport

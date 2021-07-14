@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ureport.fullname" . }}-celery-worker
+  labels:
+    {{- include "ureport.labels" . | nindent 4 }}
+    app.kubernetes.io/component: celery-worker
+spec:
+  {{- if not .Values.celeryWorker.autoscaling.enabled }}
+  replicas: {{ .Values.celeryWorker.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ureport.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: celery-worker
+      {{- with .Values.extraSelectorLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "ureport.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: celery-worker
+        {{- with .Values.extraSelectorLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.celeryWorker.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.celeryWorker.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.celeryWorker.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ureport.fullname" . }}
+            - secretRef:
+                name: {{ include "ureport.fullname" . }}
+          livenessProbe:
+            {{- toYaml .Values.celeryWorker.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.celeryWorker.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.celeryWorker.resources | nindent 12 }}
+      {{- with .Values.celeryWorker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.celeryWorker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.celeryWorker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

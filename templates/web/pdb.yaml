@@ -1,0 +1,26 @@
+{{- if .Values.web.podDisruptionBudget.enabled }}
+{{- if semverCompare ">=1.21" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: policy/v1
+{{- else -}}
+apiVersion: policy/v1beta1
+{{- end }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "ureport.fullname" . }}-web
+  labels:
+    {{- include "ureport.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.web.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.web.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.web.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.web.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ureport.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+      {{- with .Values.extraSelectorLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+{{- end }}
