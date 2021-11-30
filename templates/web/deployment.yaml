@@ -50,6 +50,8 @@ spec:
                 name: {{ include "ureport.fullname" . }}
             - secretRef:
                 name: {{ include "ureport.fullname" . }}
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}-web
