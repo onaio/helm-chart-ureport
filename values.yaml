@@ -112,7 +112,7 @@ celeryBeat:
     - /bin/bash
     - '-c'
     - >-
-      celery beat -A ureport.celery:app --workdir=/ureport --loglevel=INFO
+      celery -A ureport.celery:app --workdir=/ureport beat --loglevel=INFO
       --schedule=/ureport/celerybeat-schedule
   podAnnotations: {}
 
@@ -135,8 +135,8 @@ celeryWorker:
     - /bin/bash
     - '-c'
     - >-
-      celery multi start ureport.celery ureport.sync ureport.slow
-      -A ureport.celery:app --loglevel=INFO --logfile=/ureport/celeryworker.log
+      celery -A ureport.celery:app multi start ureport.celery ureport.sync ureport.slow
+      --loglevel=INFO --logfile=/ureport/celeryworker.log
       --pidfile=/ureport/celeryw-%n.pid -Q:ureport.celery celery
       -Q:ureport.sync sync -Q:ureport.slow slow && tail -f /ureport/celeryworker.log
   podAnnotations: {}
@@ -166,9 +166,9 @@ celeryWorker:
         - /bin/bash
         - '-c'
         - >-
-          celery inspect ping -A ureport.celery:app -d ureport.celery@$HOSTNAME &&
-          celery inspect ping -A ureport.celery:app -d ureport.sync@$HOSTNAME &&
-          celery inspect ping -A ureport.celery:app -d ureport.slow@$HOSTNAME
+          celery -A ureport.celery:app inspect ping -d ureport.celery@$HOSTNAME &&
+          celery -A ureport.celery:app inspect ping -d ureport.sync@$HOSTNAME &&
+          celery -A ureport.celery:app inspect ping -d ureport.slow@$HOSTNAME
     initialDelaySeconds: 30
     periodSeconds: 60
     timeoutSeconds: 10
@@ -179,9 +179,9 @@ celeryWorker:
         - /bin/bash
         - '-c'
         - >-
-          celery inspect ping -A ureport.celery:app -d ureport.celery@$HOSTNAME &&
-          celery inspect ping -A ureport.celery:app -d ureport.sync@$HOSTNAME &&
-          celery inspect ping -A ureport.celery:app -d ureport.slow@$HOSTNAME
+          celery -A ureport.celery:app inspect ping -d ureport.celery@$HOSTNAME &&
+          celery -A ureport.celery:app inspect ping -d ureport.sync@$HOSTNAME &&
+          celery -A ureport.celery:app inspect ping -d ureport.slow@$HOSTNAME
     initialDelaySeconds: 30
     periodSeconds: 60
     timeoutSeconds: 10
