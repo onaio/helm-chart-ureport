@@ -53,10 +53,14 @@ web:
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
+
+    # ingressClassName
+    # className: ""
     hosts:
       - host: ureport.local
         paths:
         - path: /
+          pathType: Prefix
           backend:
             serviceName: ureport-web
             servicePort: 3031
