@@ -1,5 +1,6 @@
 {{- if .Values.web.podDisruptionBudget.enabled }}
-{{- if semverCompare ">=1.21" .Capabilities.KubeVersion.GitVersion -}}
+{{- $kubeVersion:= substr 0 5 .Capabilities.KubeVersion.Version -}}
+{{- if semverCompare ">=1.21" $kubeVersion -}}
 apiVersion: policy/v1
 {{- else -}}
 apiVersion: policy/v1beta1
